@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="45">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>4</ID>
+      <Description>"Change the file output location in the main LUA script (CTRL + ALT + L)  or edit the script below and execute it"</Description>
+      <Color>0000FF</Color>
+      <GroupHeader>1</GroupHeader>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>6</ID>
+          <Description>"Right click -&gt; Change Script  to change output location, then Ok -&gt; Activate (checkbox to the left)"</Description>
+          <Color>FF0000</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>{$lua}
+if syntaxcheck then return end
+outLoc = os.getenv("TEMP").."\\gpv_decrypt"
+--[[e.g.
+outLoc = "C:\\Gaming\\Steam\\steamapps\\common\\AoE2DE\\gpv_extract"
+]]
+
+if string.sub(outLoc, -1) ~= "\\" then
+  outLoc = outLoc.."\\"
+end
+
+print("Set location to: "..outLoc)
+[ENABLE]
+
+ 
+ 
+[DISABLE]
+
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>7</ID>
+          <Description>"If you want the changes to stick, remember to save the ct file (though activation required each CE restart)"</Description>
+          <Color>0000FF</Color>
+          <GroupHeader>1</GroupHeader>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>0</ID>
+      <Description>"Dump gpv keys, iv [Method 1] and dump decrypted campaigns"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{$lua}
+if syntaxcheck then return end
+[ENABLE]
+if not outLoc then
+   print("Output location not defined")
+   outLoc = os.getenv("TEMP").."\\gpv_decrypt"
+   print("Set location to: "..outLoc)
+end
+if string.sub(outLoc, -1) ~= "\\" then
+  outLoc = outLoc.."\\"
+end
+
+openProcess("AoE2DE_s.exe")
+
+function AOBScanModule(bytes, flags)
+   if type(process) == "nil" then
+      return nil
+   end
+   local ms = createMemScan()
+   local AOB = bytes
+   local startAddress = getAddress(process)
+   local stopAddress = startAddress + getModuleSize(process)
+   ms.firstScan(soExactValue, vtByteArray, nil, AOB, nil, startAddress, stopAddress,
+                             flags, nil, nil , true, nil, nil, nil)
+   ms.waitTillDone()
+   local fl = createFoundList(ms)
+   fl.initialize()
+   ms.destroy()
+   return fl
+end
+
+function reverseBytes(num)
+    -- Convert integer to hexadecimal string
+    local hexValue = string.format('%X', num)
+
+    -- Ensure the length of the hex string is even by adding a leading zero if necessary
+    if #hexValue % 2 ~= 0 then
+        hexValue = '0' .. hexValue
+    end
+    -- Reverse the byte order
+    local reversedHex = ''
+    for i = #hexValue, 1, -2 do
+        reversedHex = reversedHex .. string.sub(hexValue, i-1, i)
+    end
+    return reversedHex
+end
+
+local scans = AOBScanModule("49 8B 43 08 49 2B 03", "*W-C+X")
+if scans ~= nil then
+   if scans.Count == 1 then
+      addr = scans[0]
+   else
+       print("too many AOB results")
+   end
+   scans.destroy()
+   scans = nil
+else
+    print("couldn't find any AOB results")
+end
+
+function first_write_bp()
+	 local filename = readString(readPointer(readPointer(RBP-0x20)))
+     print("Found "..filename)
+     local magicName = readString(readPointer(RBP+0x10)+0x750,4)
+     local dlcName = string.reverse(magicName)
+     print("Found "..dlcName)
+     local valid = not magicName:find("[^A-Za-z0-9_]")
+     if valid == false then
+        print("Invalid name, changing to: "..filename)
+        local valid2 = not filename:find("[^A-Za-z0-9_.]")
+        if valid2 == false then
+           filename = "tmp_"..readInteger(RBP+0x90+0x1FB)
+           print("Invalid name, changing to: "..filename.." for manual checking")
+        end
+     else
+         filename = dlcName
+     end
+	 --writeRegionToFile(outLoc..filename..".statedump",RBP+0x90,0x30B)
+	 writeRegionToFile(outLoc.."aoe2de.sbox",RBP+0x90+0x20B,0x100)
+	 writeRegionToFile(outLoc..filename..".key",RBP+0x90+0x100,0x20)
+     --iv has already been incremented, we temporarily decrement it, then increment again
+     --messy but it works
+     local iv = readQword(RBP+0x90+0x1FB+0x08)
+     local iv_dec = tonumber("0x"..reverseBytes(tonumber("0x"..reverseBytes(iv))-1))
+     writeQword(RBP+0x90+0x1FB+0x08,iv_dec)
+	 writeRegionToFile(outLoc..filename..".iv",RBP+0x90+0x1FB,0x10)
+     writeQword(RBP+0x90+0x1FB+0x08,iv)
+
+     tmpAddr = RCX+readInteger(RBP)-1
+     debug_removeBreakpoint(addr)
+     debug_setBreakpoint(tmpAddr,1,bptAccess,last_write_bp)
+
+     debug_continueFromBreakpoint(co_run)
+     return 0
+end
+
+function last_write_bp()
+     local nameOffset = 4*(2+readInteger(RCX+4))
+     local campaignName = readString(RCX+nameOffset)
+     print("Dumping "..campaignName)
+     debug_removeBreakpoint(tmpAddr)
+     debug_setBreakpoint(addr, first_write_bp)
+     writeRegionToFile(outLoc..campaignName..".aoe2campaign",RCX,readInteger(RBP))
+     debug_continueFromBreakpoint(co_run)
+     debug_continueFromBreakpoint(co_run)
+     return 0
+end
+
+debugProcess()
+debug_setBreakpoint(addr, first_write_bp)
+ 
+[DISABLE]
+debug_removeBreakpoint(addr)
+debug_removeBreakpoint(tmpAddr)
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>1</ID>
+      <Description>"Dump gpv keys, iv [Method 2]"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{$lua}
+if syntaxcheck then return end
+[ENABLE]
+if not outLoc then
+   print("Output location not defined")
+   outLoc = os.getenv("TEMP").."\\gpv_decrypt"
+   print("Set location to: "..outLoc)
+end
+if string.sub(outLoc, -1) ~= "\\" then
+  outLoc = outLoc.."\\"
+end
+
+openProcess("AoE2DE_s.exe")
+
+function AOBScanModule(bytes, flags)
+   if type(process) == "nil" then
+      return nil
+   end
+   local ms = createMemScan()
+   local AOB = bytes
+   local startAddress = getAddress(process)
+   local stopAddress = startAddress + getModuleSize(process)
+   ms.firstScan(soExactValue, vtByteArray, nil, AOB, nil, startAddress, stopAddress,
+                             flags, nil, nil , true, nil, nil, nil)
+   ms.waitTillDone()
+   local fl = createFoundList(ms)
+   fl.initialize()
+   ms.destroy()
+   return fl
+end
+
+local scans = AOBScanModule("48 81 C1 FB 01 00 00 41 B8 10 00 00 00","*W-C+X")
+if scans ~= nil then
+   if scans.Count == 1 then
+      addr = scans[0]
+   else
+       print("too many AOB results")
+   end
+   scans.destroy()
+   scans = nil
+else
+    print("couldn't find any AOB results")
+end
+
+debugProcess()
+debug_setBreakpoint(addr, function()
+  local magicName = readString(RSP+0x38,4)
+  local dlcName = string.reverse(magicName)
+  print("Found "..dlcName)
+  local valid = not magicName:find("[^A-Za-z0-9_]")
+  if valid == false then
+	 local magicName2 = readString(readPointer(R12-0x28)+0x750,4)
+     dlcName = string.reverse(magicName2)
+     print("Invalid name, changing to: "..dlcName)
+	 local valid2 = not magicName2:find("[^A-Za-z0-9_]")
+     if valid2 == false then
+        dlcName = "tmp_"..readInteger(R12)
+        print("Invalid name, changing to: "..dlcName.." for manual checking")
+     end
+  end
+  --writeRegionToFile(outLoc..dlcName..".sbox",RBP-0x90,0x100)
+  writeRegionToFile(outLoc..dlcName..".key",RCX+0x100,0x20)
+  writeRegionToFile(outLoc..dlcName..".iv",R12,0x10)
+  writeRegionToFile(outLoc.."aoe2de.sbox",RCX+0x20B,0x100)
+  debug_continueFromBreakpoint(co_run)
+  return 0
+  end
+)
+
+ 
+ 
+[DISABLE]
+debug_removeBreakpoint(addr)
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>2</ID>
+      <Description>"Dump gpv keys, iv [Method 3]"</Description>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{$lua}
+if syntaxcheck then return end
+[ENABLE]
+if not outLoc then
+   print("Output location not defined")
+   outLoc = os.getenv("TEMP").."\\gpv_decrypt"
+   print("Set location to: "..outLoc)
+end
+if string.sub(outLoc, -1) ~= "\\" then
+  outLoc = outLoc.."\\"
+end
+
+openProcess("AoE2DE_s.exe")
+
+function AOBScanModule(bytes, flags)
+   if type(process) == "nil" then
+      return nil
+   end
+   local ms = createMemScan()
+   local AOB = bytes
+   local startAddress = getAddress(process)
+   local stopAddress = startAddress + getModuleSize(process)
+   ms.firstScan(soExactValue, vtByteArray, nil, AOB, nil, startAddress, stopAddress,
+                             flags, nil, nil , true, nil, nil, nil)
+   ms.waitTillDone()
+   local fl = createFoundList(ms)
+   fl.initialize()
+   ms.destroy()
+   return fl
+end
+
+
+local scans = AOBScanModule("48 2B D3 48 3B F2","*W-C+X")
+if scans ~= nil then
+   if scans.Count == 1 then
+      addr = scans[0]
+   else
+       print("too many AOB results")
+   end
+   scans.destroy()
+   scans = nil
+else
+    print("couldn't find any AOB results")
+end
+
+debugProcess()
+debug_setBreakpoint(addr, function()
+  local magicName = readString(readPointer(RSP+8)+0x750,4)
+  local dlcName = string.reverse(magicName)
+  print("Found "..dlcName)
+  local valid = not magicName:find("[^A-Za-z0-9_]")
+  if valid == false then
+     dlcName = "tmp_"..readInteger(RBP-0x90+0x1FB)
+     print("Invalid name, changing to: "..dlcName.." for manual checking")
+  end
+  --writeRegionToFile(outLoc..dlcName..".sbox",RBP-0x90,0x100)
+  writeRegionToFile(outLoc..dlcName..".key",RBP-0x90+0x100,0x20)
+  writeRegionToFile(outLoc..dlcName..".iv",RBP-0x90+0x1FB,0x10)
+  writeRegionToFile(outLoc.."aoe2de.sbox",RBP-0x90+0x20B,0x100)
+  debug_continueFromBreakpoint(co_run)
+  return 0
+  end
+)
+
+
+ 
+ 
+[DISABLE]
+debug_removeBreakpoint(addr)
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>8</ID>
+      <Description>"Readme"</Description>
+      <Color>808080</Color>
+      <GroupHeader>1</GroupHeader>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>9</ID>
+          <Description>"Make sure to change the output directory - either "</Description>
+          <GroupHeader>1</GroupHeader>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>10</ID>
+              <Description>"Edit and run via CTRL + ALT + L or Table -&gt; Show Cheat Table Lua Script and then Execute"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>11</ID>
+              <Description>"Edit the script in blue, and activate it"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>17</ID>
+          <Description>"Option 1 - no RoR DLC"</Description>
+          <GroupHeader>1</GroupHeader>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>12</ID>
+              <Description>"Wait until AoE2 has started (~65MB RAM in Task Manager)"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>13</ID>
+              <Description>"Then activate one of the methods"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>14</ID>
+              <Description>"Waiting too little will mean that the exe may not be unpacked fully and will crash"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>15</ID>
+              <Description>"Waiting too long will mean that some files may already be processed"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>16</ID>
+              <Description>"There's usually plenty of time"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>18</ID>
+          <Description>"Option 2 - RoR DLC owned"</Description>
+          <GroupHeader>1</GroupHeader>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>19</ID>
+              <Description>"Wait until AoE2 has fully launched"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>20</ID>
+              <Description>"Then activate one of the methods"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>21</ID>
+              <Description>"Then switch modes between RoR and base AoE2 DE"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>22</ID>
+          <Description>"Then, the AES key, iv, and s-box for each DLC will be dumped to your chosen output location"</Description>
+          <GroupHeader>1</GroupHeader>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>24</ID>
+              <Description>"Key and IV are unique to each DLC, the S-Box is shared"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>23</ID>
+          <Description>"If using Method 1, the decrypted gpvs will also be dumped there"</Description>
+          <GroupHeader>1</GroupHeader>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>25</ID>
+          <Description>"If planning on using gpv_decrypt.py"</Description>
+          <GroupHeader>1</GroupHeader>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>26</ID>
+              <Description>"Place the .key and .iv files in \keys\ and aoe2de.sbox next to gpv_decrypt.py"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>27</ID>
+              <Description>"Place the .gpv files in \in\"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>28</ID>
+              <Description>"Run the python script"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+            <CheatEntry>
+              <ID>29</ID>
+              <Description>"Decrypted files will be located in \out\"</Description>
+              <GroupHeader>1</GroupHeader>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols/>
+  <LuaScript>--EDIT THIS
+outLoc = os.getenv("TEMP").."\\gpv_decrypt"
+--[[e.g.
+outLoc = "C:\\Gaming\\Steam\\steamapps\\common\\AoE2DE\\gpv_extract"
+]]
+
+
+outLoc = "R:\\Downloads\\Game Files and Patches\\AoE2DE\\temp\\temp_dump"
+
+if string.sub(outLoc, -1) ~= "\\" then
+  outLoc = outLoc.."\\"
+end
+print("Set location to: "..outLoc)
+</LuaScript>
+</CheatTable>
