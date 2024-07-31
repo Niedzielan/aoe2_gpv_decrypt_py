@@ -16,11 +16,11 @@ Method 2 - Memory Dump [Requires Cheat Engine]
 1. Load gpv_decrypt.CT with Cheat Engine 7.5 (older versions not tested)
 2. Edit the output directory variable outLoc (either in the main LUA script which should popup, or change the blue script and activate it)
 3. Start AoE2DE
-4. Attach method is easier with Rise of Rome, as switching modes causes gpvs to be loaded into memory again
-    * [Rise of Rome] Wait until the game has loaded
+4. Attach method is easier with Return of Rome, as switching modes causes gpvs to be loaded into memory again
+    * [Return of Rome] Wait until the game has loaded
     * [No RoR] Wait a few seconds for the exe to unpack into memory. Generally ~65MB Ram or when the small splash screen appears
 5. Activate one of the three scripts
-    * [Rise of Rome] Switch modes. Only the gpv files for the mode you switch into will be loaded, so switch back again to load everything.
+    * [Return of Rome] Switch modes. Only the gpv files for the mode you switch into will be loaded, so switch back again to load everything.
     * [No RoR] The files will be loaded upon startup. There is a timeframe of several seconds between the exe being unpacked and the gpvs being loaded, if it doesn't work then retry steps 3-5 with different timing.
     * The first of the three scripts will also dump the decrypted campaign files without the need of the following steps, although it is recommended to continue so the process doesn't need repeating for future versions
 7. Move the .key and .iv files now in the output directory (defined in step 2) to a \keys\ folder, and aoe2de.sbox next to gpv_decrypt.py
