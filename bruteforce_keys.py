@@ -13,7 +13,8 @@ UNIQUE_BYTES_IN_32 = 2 * UNIQUE_BYTES_IN_16
 
 TEA_KEY_MAX_COUNT = 2 # min count is 2 as well,
 
-TEA_IV_DIST_FROM_KEY_MAX = 0xA0 # at 0x80, finds all in 2.5-3 minutes instead of 3-3.5
+# As of update #118476, DLC1 and DLC2 TEA distance needs increasing, doubled to 0x100.
+TEA_IV_DIST_FROM_KEY_MAX = 0x100 # at 0x80, finds all in 2.5-3 minutes instead of 3-3.5
 
 
 # gpv keys are specific for each DLC as determined via the first 4 bytes of the gpv header
@@ -244,7 +245,7 @@ def get_key_list_from_keyblob(kb):
     keys = []
     kb_ind = 1 # keyblob index
     kb_keydist = 0x60 # keyblob key distance, aka 0x60
-    kb_ivdist = 0x30 # keyblob iv distance, aka 0x60
+    kb_ivdist = 0x30 # keyblob iv distance, aka 0x30
     while kb_ind < len(kb):
         keys.append([split_arr(kb[kb_ind : kb_ind + 0x20]), split_arr(kb[kb_ind + kb_keydist : kb_ind + kb_keydist + 0x10])])
         kb_ind += kb_keydist + kb_ivdist
@@ -354,6 +355,8 @@ del potential_tea_keyblobs
 
 if found_key:
     print("Outputting found keys to keys directory")
+    if not os.path.exists("keys"):
+        os.mkdir("keys")
 
     for f_key in found_keys:
         with open(os.path.join("keys",f_key.decode()+".key"), "wb") as key_f:
