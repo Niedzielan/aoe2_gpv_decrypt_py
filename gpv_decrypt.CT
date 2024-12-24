@@ -4,12 +4,14 @@
     <CheatEntry>
       <ID>4</ID>
       <Description>"Change the file output location in the main LUA script (CTRL + ALT + L)  or edit the script below and execute it"</Description>
+      <LastState Value="" RealAddress="00000000"/>
       <Color>0000FF</Color>
       <GroupHeader>1</GroupHeader>
       <CheatEntries>
         <CheatEntry>
           <ID>6</ID>
           <Description>"Right click -&gt; Change Script  to change output location, then Ok -&gt; Activate (checkbox to the left)"</Description>
+          <LastState/>
           <Color>FF0000</Color>
           <VariableType>Auto Assembler Script</VariableType>
           <AssemblerScript>{$lua}
@@ -35,6 +37,7 @@ print("Set location to: "..outLoc)
         <CheatEntry>
           <ID>7</ID>
           <Description>"If you want the changes to stick, remember to save the ct file (though activation required each CE restart)"</Description>
+          <LastState Value="" RealAddress="00000000"/>
           <Color>0000FF</Color>
           <GroupHeader>1</GroupHeader>
         </CheatEntry>
@@ -43,6 +46,7 @@ print("Set location to: "..outLoc)
     <CheatEntry>
       <ID>0</ID>
       <Description>"Dump gpv keys, iv [Method 1] and dump decrypted campaigns"</Description>
+      <LastState/>
       <VariableType>Auto Assembler Script</VariableType>
       <AssemblerScript>{$lua}
 if syntaxcheck then return end
@@ -91,7 +95,7 @@ function reverseBytes(num)
     return reversedHex
 end
 
-local scans = AOBScanModule("49 8B 43 08 49 2B 03", "*W-C+X")
+local scans = AOBScanModule("41 FF C0 48 FF C2 89 5D B0 30 04 39 49 8B 43 08", "*W-C+X")
 if scans ~= nil then
    if scans.Count == 1 then
       addr = scans[0]
@@ -106,17 +110,27 @@ end
 
 function first_write_bp()
 	 local filename = readString(readPointer(readPointer(RBP-0x20)))
-     print("Found "..filename)
+     print("Found file: "..filename)
      local magicName = readString(readPointer(RBP+0x10)+0x750,4)
      local dlcName = string.reverse(magicName)
-     print("Found "..dlcName)
+     print("Found dlc: "..dlcName)
      local valid = not magicName:find("[^A-Za-z0-9_]")
-     if valid == false then
-        print("Invalid name, changing to: "..filename)
-        local valid2 = not filename:find("[^A-Za-z0-9_.]")
-        if valid2 == false then
-           filename = "tmp_"..readInteger(RBP+0x90+0x1FB)
-           print("Invalid name, changing to: "..filename.." for manual checking")
+     --print("v:"..tostring(valid))
+     if valid == false or magicName == "" then
+        print("Invalid name, checking another possible name..")
+        magicName = readString(readPointer(RBP+0x10)+0x740,4)
+        dlcName = string.reverse(magicName)
+        print("Found dlc: "..dlcName)
+        local valid3 = not magicName:find("[^A-Za-z0-9_]")
+        if valid3 == false or magicName == "" then
+          print("Invalid name, changing to: "..filename)
+          local valid2 = not filename:find("[^A-Za-z0-9_.]")
+          if valid2 == false or filename == ""  then
+             filename = "tmp_"..readInteger(RBP+0x90+0x1FB)
+             print("Invalid name, changing to: "..filename.." for manual checking")
+          end
+        else
+          filename = dlcName
         end
      else
          filename = dlcName
@@ -132,7 +146,7 @@ function first_write_bp()
 	 writeRegionToFile(outLoc..filename..".iv",RBP+0x90+0x1FB,0x10)
      writeQword(RBP+0x90+0x1FB+0x08,iv)
 
-     tmpAddr = RCX+readInteger(RBP)-1
+     tmpAddr = RCX+readInteger(RBP+0x30)-1
      debug_removeBreakpoint(addr)
      debug_setBreakpoint(tmpAddr,1,bptAccess,last_write_bp)
 
@@ -144,17 +158,18 @@ function last_write_bp()
      local nameOffset = 4*(2+readInteger(RCX+4))
      local campaignName = readString(RCX+nameOffset)
      print("Dumping "..campaignName)
+     print("Size "..tostring(readInteger(RBP+0x30)))
      debug_removeBreakpoint(tmpAddr)
      debug_setBreakpoint(addr, first_write_bp)
-     writeRegionToFile(outLoc..campaignName..".aoe2campaign",RCX,readInteger(RBP))
-     debug_continueFromBreakpoint(co_run)
-     debug_continueFromBreakpoint(co_run)
+     writeRegionToFile(outLoc..campaignName..".aoe2campaign",RCX,readInteger(RBP+0x30))
+     --debug_continueFromBreakpoint(co_run)
+     --debug_continueFromBreakpoint(co_run)
      return 0
 end
 
 debugProcess()
 debug_setBreakpoint(addr, first_write_bp)
- 
+
 [DISABLE]
 debug_removeBreakpoint(addr)
 debug_removeBreakpoint(tmpAddr)
@@ -163,6 +178,7 @@ debug_removeBreakpoint(tmpAddr)
     <CheatEntry>
       <ID>1</ID>
       <Description>"Dump gpv keys, iv [Method 2]"</Description>
+      <LastState/>
       <VariableType>Auto Assembler Script</VariableType>
       <AssemblerScript>{$lua}
 if syntaxcheck then return end
@@ -242,6 +258,7 @@ debug_removeBreakpoint(addr)
     <CheatEntry>
       <ID>2</ID>
       <Description>"Dump gpv keys, iv [Method 3]"</Description>
+      <LastState/>
       <VariableType>Auto Assembler Script</VariableType>
       <AssemblerScript>{$lua}
 if syntaxcheck then return end
@@ -317,22 +334,26 @@ debug_removeBreakpoint(addr)
     <CheatEntry>
       <ID>8</ID>
       <Description>"Readme"</Description>
+      <LastState Value="" RealAddress="00000000"/>
       <Color>808080</Color>
       <GroupHeader>1</GroupHeader>
       <CheatEntries>
         <CheatEntry>
           <ID>9</ID>
           <Description>"Make sure to change the output directory - either "</Description>
+          <LastState Value="" RealAddress="00000000"/>
           <GroupHeader>1</GroupHeader>
           <CheatEntries>
             <CheatEntry>
               <ID>10</ID>
               <Description>"Edit and run via CTRL + ALT + L or Table -&gt; Show Cheat Table Lua Script and then Execute"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
             <CheatEntry>
               <ID>11</ID>
               <Description>"Edit the script in blue, and activate it"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
           </CheatEntries>
@@ -340,31 +361,37 @@ debug_removeBreakpoint(addr)
         <CheatEntry>
           <ID>17</ID>
           <Description>"Option 1 - no RoR DLC"</Description>
+          <LastState Value="" RealAddress="00000000"/>
           <GroupHeader>1</GroupHeader>
           <CheatEntries>
             <CheatEntry>
               <ID>12</ID>
               <Description>"Wait until AoE2 has started (~65MB RAM in Task Manager)"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
             <CheatEntry>
               <ID>13</ID>
               <Description>"Then activate one of the methods"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
             <CheatEntry>
               <ID>14</ID>
               <Description>"Waiting too little will mean that the exe may not be unpacked fully and will crash"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
             <CheatEntry>
               <ID>15</ID>
               <Description>"Waiting too long will mean that some files may already be processed"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
             <CheatEntry>
               <ID>16</ID>
               <Description>"There's usually plenty of time"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
           </CheatEntries>
@@ -372,21 +399,25 @@ debug_removeBreakpoint(addr)
         <CheatEntry>
           <ID>18</ID>
           <Description>"Option 2 - RoR DLC owned"</Description>
+          <LastState Value="" RealAddress="00000000"/>
           <GroupHeader>1</GroupHeader>
           <CheatEntries>
             <CheatEntry>
               <ID>19</ID>
               <Description>"Wait until AoE2 has fully launched"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
             <CheatEntry>
               <ID>20</ID>
               <Description>"Then activate one of the methods"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
             <CheatEntry>
               <ID>21</ID>
               <Description>"Then switch modes between RoR and base AoE2 DE"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
           </CheatEntries>
@@ -394,11 +425,13 @@ debug_removeBreakpoint(addr)
         <CheatEntry>
           <ID>22</ID>
           <Description>"Then, the AES key, iv, and s-box for each DLC will be dumped to your chosen output location"</Description>
+          <LastState Value="" RealAddress="00000000"/>
           <GroupHeader>1</GroupHeader>
           <CheatEntries>
             <CheatEntry>
               <ID>24</ID>
               <Description>"Key and IV are unique to each DLC, the S-Box is shared"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
           </CheatEntries>
@@ -406,31 +439,37 @@ debug_removeBreakpoint(addr)
         <CheatEntry>
           <ID>23</ID>
           <Description>"If using Method 1, the decrypted gpvs will also be dumped there"</Description>
+          <LastState Value="" RealAddress="00000000"/>
           <GroupHeader>1</GroupHeader>
         </CheatEntry>
         <CheatEntry>
           <ID>25</ID>
           <Description>"If planning on using gpv_decrypt.py"</Description>
+          <LastState Value="" RealAddress="00000000"/>
           <GroupHeader>1</GroupHeader>
           <CheatEntries>
             <CheatEntry>
               <ID>26</ID>
               <Description>"Place the .key and .iv files in \keys\ and aoe2de.sbox next to gpv_decrypt.py"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
             <CheatEntry>
               <ID>27</ID>
               <Description>"Place the .gpv files in \in\"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
             <CheatEntry>
               <ID>28</ID>
               <Description>"Run the python script"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
             <CheatEntry>
               <ID>29</ID>
               <Description>"Decrypted files will be located in \out\"</Description>
+              <LastState Value="" RealAddress="00000000"/>
               <GroupHeader>1</GroupHeader>
             </CheatEntry>
           </CheatEntries>

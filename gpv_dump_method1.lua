@@ -1,9 +1,12 @@
+{$lua}
+if syntaxcheck then return end
+[ENABLE]
 if not outLoc then
    print("Output location not defined")
    outLoc = os.getenv("TEMP").."\\gpv_decrypt"
    print("Set location to: "..outLoc)
 end
-if string.sub(outLoc,-1) ~= "\\" then
+if string.sub(outLoc, -1) ~= "\\" then
   outLoc = outLoc.."\\"
 end
 
@@ -42,7 +45,7 @@ function reverseBytes(num)
     return reversedHex
 end
 
-local scans = AOBScanModule("49 8B 43 08 49 2B 03", "*W-C+X")
+local scans = AOBScanModule("41 FF C0 48 FF C2 89 5D B0 30 04 39 49 8B 43 08", "*W-C+X")
 if scans ~= nil then
    if scans.Count == 1 then
       addr = scans[0]
@@ -57,17 +60,27 @@ end
 
 function first_write_bp()
 	 local filename = readString(readPointer(readPointer(RBP-0x20)))
-     print("Found "..filename)
+     print("Found file: "..filename)
      local magicName = readString(readPointer(RBP+0x10)+0x750,4)
      local dlcName = string.reverse(magicName)
-     print("Found "..dlcName)
+     print("Found dlc: "..dlcName)
      local valid = not magicName:find("[^A-Za-z0-9_]")
-     if valid == false then
-        print("Invalid name, changing to: "..filename)
-        local valid2 = not filename:find("[^A-Za-z0-9_.]")
-        if valid2 == false then
-           filename = "tmp_"..readInteger(RBP+0x90+0x1FB)
-           print("Invalid name, changing to: "..filename.." for manual checking")
+     --print("v:"..tostring(valid))
+     if valid == false or magicName == "" then
+        print("Invalid name, checking another possible name..")
+        magicName = readString(readPointer(RBP+0x10)+0x740,4)
+        dlcName = string.reverse(magicName)
+        print("Found dlc: "..dlcName)
+        local valid3 = not magicName:find("[^A-Za-z0-9_]")
+        if valid3 == false or magicName == "" then
+          print("Invalid name, changing to: "..filename)
+          local valid2 = not filename:find("[^A-Za-z0-9_.]")
+          if valid2 == false or filename == ""  then
+             filename = "tmp_"..readInteger(RBP+0x90+0x1FB)
+             print("Invalid name, changing to: "..filename.." for manual checking")
+          end
+        else
+          filename = dlcName
         end
      else
          filename = dlcName
@@ -83,7 +96,7 @@ function first_write_bp()
 	 writeRegionToFile(outLoc..filename..".iv",RBP+0x90+0x1FB,0x10)
      writeQword(RBP+0x90+0x1FB+0x08,iv)
 
-     tmpAddr = RCX+readInteger(RBP)-1
+     tmpAddr = RCX+readInteger(RBP+0x30)-1
      debug_removeBreakpoint(addr)
      debug_setBreakpoint(tmpAddr,1,bptAccess,last_write_bp)
 
@@ -95,13 +108,18 @@ function last_write_bp()
      local nameOffset = 4*(2+readInteger(RCX+4))
      local campaignName = readString(RCX+nameOffset)
      print("Dumping "..campaignName)
+     print("Size "..tostring(readInteger(RBP+0x30)))
      debug_removeBreakpoint(tmpAddr)
      debug_setBreakpoint(addr, first_write_bp)
-     writeRegionToFile(outLoc..campaignName..".aoe2campaign",RCX,readInteger(RBP))
-     debug_continueFromBreakpoint(co_run)
-     debug_continueFromBreakpoint(co_run)
+     writeRegionToFile(outLoc..campaignName..".aoe2campaign",RCX,readInteger(RBP+0x30))
+     --debug_continueFromBreakpoint(co_run)
+     --debug_continueFromBreakpoint(co_run)
      return 0
 end
 
 debugProcess()
 debug_setBreakpoint(addr, first_write_bp)
+ 
+[DISABLE]
+debug_removeBreakpoint(addr)
+debug_removeBreakpoint(tmpAddr)
