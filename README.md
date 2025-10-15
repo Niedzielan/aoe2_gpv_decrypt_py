@@ -6,6 +6,10 @@ Currently as of AoE2DE update:
 Update 158041, only **Memory Dump** script 2 is working (titled Dump gpv keys, iv [Method 2] and dump decrypted campaigns )  
 ~~Update 130746, only **Memory Dump** script 1 is working~~
 
+# Quick Note on extracting scenarios from decrypted campaign files
+Most of the campaigns are extractable ingame (put them in the custom campaigns folder, then load in the editor.)
+The Chronicles Alexander prcam1.aoe2campaign might not extract scenarios well in-game due to the message box being too large to fit the confirm button in. You can use [rge_campaign](https://github.com/withmorten/rge_campaign/) to extract (e.g. with command `rge_campaign.exe x prcam1.aoe2campaign out_prcam1` )
+
 # Short Readme
 
 Method 1 - Bruteforce [Requires pe-sieve]
