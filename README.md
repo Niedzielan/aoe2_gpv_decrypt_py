@@ -2,7 +2,9 @@
 Python script to decrypt aoe2campaign.gpv files, and two methods of extracting the AES keys to do so.
 
 # Update Notice
-Currently as of AoE2DE update Update 130746, only **Memory Dump** script 1 is working
+Currently as of AoE2DE update:  
+Update 158041, only **Memory Dump** script 2 is working (titled Dump gpv keys, iv [Method 2] and dump decrypted campaigns )  
+~~Update 130746, only **Memory Dump** script 1 is working~~
 
 # Short Readme
 
