@@ -8,7 +8,11 @@ Update 158041, only **Memory Dump** script 2 is working (titled Dump gpv keys, i
 
 # Quick Note on extracting scenarios from decrypted campaign files
 Most of the campaigns are extractable ingame (put them in the custom campaigns folder, then load in the editor.)
-The Chronicles Alexander prcam1.aoe2campaign might not extract scenarios well in-game due to the message box being too large to fit the confirm button in. You can use [rge_campaign](https://github.com/withmorten/rge_campaign/) to extract (e.g. with command `rge_campaign.exe x prcam1.aoe2campaign out_prcam1` )
+
+Currently there is a UI bug when trying to extract scenarios when there are too many scenarios and the confirm button is off-screen.  
+This ocurs with the Chronicles Alexander prcam1.aoe2campaign  
+You should be able to use the arrow keys to select the buttons and enter to activate them (i.e. left arror + enter) [Thanks to RoyalForgotten]  
+Alternatively, you can use [rge_campaign](https://github.com/withmorten/rge_campaign/) to extract (e.g. with command `rge_campaign.exe x prcam1.aoe2campaign out_prcam1` )
 
 # Short Readme
 
