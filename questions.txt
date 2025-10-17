@@ -1,0 +1,23 @@
+Hi, friend, are you okay?
+Oh, I want to konw, your codes what about decrypt the campaigns with .gpv extension, bit it's Invalid.
+
+Following are parameters:
+
+```
+# bruteforce_keys.py
+# Constants
+# If bruteforcing finds nothing, you can try changing these - fewer unique bytes, more distance, more leniency with finding duplicates (i.e. 3 = triplicates allowed)
+# These will cause some degree of slowdown!
+# From 14, 2, 0xA0 taking 3-3.5 minutes, to 12, 3, 0x100 taking 60+
+
+UNIQUE_BYTES_IN_16 = 15 # at 15 only DLC3, DLC4, Phil found, at 16 none found
+UNIQUE_BYTES_IN_32 = 2 * UNIQUE_BYTES_IN_16
+
+TEA_KEY_MAX_COUNT = 2 # min count is 2 as well,
+
+# As of update #118476, DLC1 and DLC2 TEA distance needs increasing, doubled to 0x100.
+TEA_IV_DIST_FROM_KEY_MAX = 0x100 # at 0x80, finds all in 2.5-3 minutes instead of 3-3.5
+```
+
+I have attempted to modify these parameters to make the script effective. But unfortunately, it's of no use.
+Can you give me some guidance?
