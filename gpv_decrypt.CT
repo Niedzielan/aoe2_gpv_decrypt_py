@@ -22,7 +22,12 @@ outLoc = "C:\\Gaming\\Steam\\steamapps\\common\\AoE2DE\\gpv_extract"
 if string.sub(outLoc, -1) ~= "\\" then
   outLoc = outLoc.."\\"
 end
-
+outLocKeys = outLoc.."keys\\"
+outLocCamp = outLoc.."dump_campaigns\\"
+os.execute("mkdir \""..outLoc.."\"")
+os.execute("mkdir \""..outLocKeys.."\"")
+os.execute("mkdir \""..outLocCamp.."\"")
+os.execute("explorer \""..outLoc.."\"")
 print("Set location to: "..outLoc)
 [ENABLE]
 
@@ -132,14 +137,14 @@ function first_write_bp()
          filename = dlcName
      end
 	 --writeRegionToFile(outLoc..filename..".statedump",RBP+0x90,0x30B)
-	 writeRegionToFile(outLoc.."aoe2de.sbox",RBP+0x90+0x20B,0x100)
-	 writeRegionToFile(outLoc..filename..".key",RBP+0x90+0x100,0x20)
+	 writeRegionToFile(outLocKeys.."aoe2de.sbox",RBP+0x90+0x20B,0x100)
+	 writeRegionToFile(outLocKeys..filename..".key",RBP+0x90+0x100,0x20)
      --iv has already been incremented, we temporarily decrement it, then increment again
      --messy but it works
      local iv = readQword(RBP+0x90+0x1FB+0x08)
      local iv_dec = tonumber("0x"..reverseBytes(tonumber("0x"..reverseBytes(iv))-1))
      writeQword(RBP+0x90+0x1FB+0x08,iv_dec)
-	 writeRegionToFile(outLoc..filename..".iv",RBP+0x90+0x1FB,0x10)
+	 writeRegionToFile(outLocKeys..filename..".iv",RBP+0x90+0x1FB,0x10)
      writeQword(RBP+0x90+0x1FB+0x08,iv)
 
      tmpAddr = RCX+readInteger(RBP+0x30)-1
@@ -157,7 +162,7 @@ function last_write_bp()
      print("Size "..tostring(readInteger(RBP+0x30)))
      debug_removeBreakpoint(tmpAddr)
      debug_setBreakpoint(addr, first_write_bp)
-     writeRegionToFile(outLoc..campaignName..".aoe2campaign",RCX,readInteger(RBP+0x30))
+     writeRegionToFile(outLocCamp..campaignName..".aoe2campaign",RCX,readInteger(RBP+0x30))
      --debug_continueFromBreakpoint(co_run)
      --debug_continueFromBreakpoint(co_run)
      return 0
@@ -173,7 +178,7 @@ debug_removeBreakpoint(tmpAddr)
     </CheatEntry>
     <CheatEntry>
       <ID>31</ID>
-      <Description>"Dump gpv keys, iv [Method 2] and dump decrypted campaigns [Worked #158041]"</Description>
+      <Description>"Dump gpv keys, iv [Method 2] and dump decrypted campaigns [Worked #158041, #169123]"</Description>
       <VariableType>Auto Assembler Script</VariableType>
       <AssemblerScript>{$lua}
 if syntaxcheck then return end
@@ -263,14 +268,14 @@ function first_write_bp()
          filename = dlcName
      end
 	 --writeRegionToFile(outLoc..filename..".statedump",RBP+0x90,0x30B)
-	 writeRegionToFile(outLoc.."aoe2de.sbox",RBP+0x90+0x20B,0x100)
-	 writeRegionToFile(outLoc..filename..".key",RBP+0x90+0x100,0x20)
+	 writeRegionToFile(outLocKeys.."aoe2de.sbox",RBP+0x90+0x20B,0x100)
+	 writeRegionToFile(outLocKeys..filename..".key",RBP+0x90+0x100,0x20)
      --iv has already been incremented, we temporarily decrement it, then increment again
      --messy but it works
      local iv = readQword(RBP+0x90+0x1FB+0x08)
      local iv_dec = tonumber("0x"..reverseBytes(tonumber("0x"..reverseBytes(iv))-1))
      writeQword(RBP+0x90+0x1FB+0x08,iv_dec)
-	 writeRegionToFile(outLoc..filename..".iv",RBP+0x90+0x1FB,0x10)
+	 writeRegionToFile(outLocKeys..filename..".iv",RBP+0x90+0x1FB,0x10)
      writeQword(RBP+0x90+0x1FB+0x08,iv)
 
      tmpAddr = RCX+readInteger(RBP+0x30)-1
@@ -288,7 +293,7 @@ function last_write_bp()
      print("Size "..tostring(readInteger(RBP+0x30)))
      debug_removeBreakpoint(tmpAddr)
      debug_setBreakpoint(addr, first_write_bp)
-     writeRegionToFile(outLoc..campaignName..".aoe2campaign",RCX,readInteger(RBP+0x30))
+     writeRegionToFile(outLocCamp..campaignName..".aoe2campaign",RCX,readInteger(RBP+0x30))
      --debug_continueFromBreakpoint(co_run)
      --debug_continueFromBreakpoint(co_run)
      return 0
@@ -598,6 +603,12 @@ outLoc = "C:\\Gaming\\Steam\\steamapps\\common\\AoE2DE\\gpv_extract"
 if string.sub(outLoc, -1) ~= "\\" then
   outLoc = outLoc.."\\"
 end
+outLocKeys = outLoc.."keys\\"
+outLocCamp = outLoc.."dump_campaigns\\"
+os.execute("mkdir \""..outLoc.."\"")
+os.execute("mkdir \""..outLocKeys.."\"")
+os.execute("mkdir \""..outLocCamp.."\"")
+os.execute("explorer \""..outLoc.."\"")
 print("Set location to: "..outLoc)
 </LuaScript>
 </CheatTable>

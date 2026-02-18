@@ -291,6 +291,9 @@ def main(argv):
         print ('IV dir is:', ivfile)
     else:
         print ('IV file is:', ivfile)
+    if not os.path.exists(sboxfile):
+        print("Couldn't find sbox file in root, assuming in keys")
+        sboxfile = os.path.join("./keys", sboxfile)
     print ("S-Box file is:", sboxfile)
     print()
 
