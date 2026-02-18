@@ -46,6 +46,14 @@ Method 2 - Memory Dump [Requires Cheat Engine]
 Method 1 is slower, with a hopefully low likelyhood to break with game updates (several assumptions are made about data that may no longer hold true with updates, as an attempt to improve speed)</strike>  
 Method 2 is more likely to break with game updates~~, though all 3 scripts worked on several tested versions~~ (some assumptions are made about code structure that may no longer hold true with updates)  
 
+# Accessing older versions of AoE2:DE
+
+This tool does not receive priority updates if there is a non-DLC update, as you can instead download an older version of AoE2 instead to dump the keys, and take the campaign files from the latest version.  
+You can download a specific version by: Going to https://steamdb.info/app/813780/depots/, finding the depot for the content to download. e.g. depot 813781-813784 are the base game resources, and DLCs in individual depots: 3219700 is The Last Chieftains.  
+Within a depot, you should find a manifest for a specific date: e.g. depot 813781 has current latest manifest 7319783204277561121 (17 Feb 2026). We can match the dates to patchnotes from https://steamdb.info/app/813780/patchnotes/ or https://www.ageofempires.com/news/age-of-empires-ii-definitive-edition-update-158041/ - if you want to download update 158041 we know it was released on 14 Oct 2025, of which the matching base game manifest is 49296955481020023.  
+By opening the Steam console ( steam://nav/console ) you can then use the depot_download command `download_depot <appid> <depotid> [<target manifestid>] [<delta manifestid>] [<depot flags filter>] : download a single depot` as such:  
+`download_depot 813780 813781 49296955481020023` and repeat this for each depot and manifest. The example command would download the update 158041 version of the game, where Method 2 is confirmed to work.  
+
 # Quick disclaimer
 
 I have done my best to ensure that these tools do not contain cryptographic secrets. The TEA, AES keys and ivs are not prepackaged. The two methods above are intended to obtain those keys from your legally purchased copy of Age of Empires 2 Definitive Edition.
