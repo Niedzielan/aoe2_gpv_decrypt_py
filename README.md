@@ -3,7 +3,8 @@ Python script to decrypt aoe2campaign.gpv files, and two methods of extracting t
 
 # Update Notice
 Currently as of AoE2DE update:  
-Update 169123, only **Memory Dump** script 2 is working (titled Dump gpv keys, iv [Method 2] and dump decrypted campaigns [Worked #158041, #169123])  
+Update 185872, only **Bruteforce** is working (script bruteforce_keys.py)  
+~~Update 169123, only **Memory Dump** script 2 is working (titled Dump gpv keys, iv [Method 2] and dump decrypted campaigns [Worked #158041, #169123])~~  
 ~~Update 158041, only **Memory Dump** script 2 is working (titled Dump gpv keys, iv [Method 2] and dump decrypted campaigns )~~   
 ~~Update 130746, only **Memory Dump** script 1 is working~~
 
@@ -17,16 +18,16 @@ Alternatively, you can use [rge_campaign](https://github.com/withmorten/rge_camp
 
 # Short Readme
 
-<strike>Method 1 - Bruteforce [Requires pe-sieve]
+Method 1 - Bruteforce [Requires pe-sieve]
 1. Unpack AoE2DE_s.exe 
     * For example with pe-sieve: start AoE2 and wait for the main menu, find the PID in Task Manager, and in command prompt / cmd / terminal run "pe-sieve.exe /pid AOE2PID" and copy the "140000000.AoE2DE_s.exe" to the \exe\ folder. The hex prefix may differ, but should still work
 2. Move the .gpv files into \in\
 3. Run bruteforce_keys.py
 4. Wait a few minutes
-5. Run gpv_decrypt.py with python 3 (only 3.10 tested)
-6. decrypted files are found in \out\ </strike>
+5. Run gpv_decrypt.py with python 3 (only 3.10-3.14 tested)
+6. decrypted files are found in \out\  
 
-Method 2 - Memory Dump [Requires Cheat Engine]
+<strike>Method 2 - Memory Dump [Requires Cheat Engine]
 1. Load gpv_decrypt.CT with Cheat Engine 7.5 (older versions not tested)
 2. Edit the output directory variable outLoc (either in the main LUA script which should popup, or change the blue script and activate it)
 3. Start AoE2DE
@@ -40,11 +41,11 @@ Method 2 - Memory Dump [Requires Cheat Engine]
 7. Move the .key and .iv files now in the output directory (defined in step 2) to a \keys\ folder, and aoe2de.sbox next to gpv_decrypt.py
 8. Move the .gpv files into \in\
 9. Run gpv_decrypt.py with python 3 (only 3.10 tested)
-10. decrypted files are found in \out\
+10. decrypted files are found in \out\</strike>
 
 <strike>Either method should work  
-Method 1 is slower, with a hopefully low likelyhood to break with game updates (several assumptions are made about data that may no longer hold true with updates, as an attempt to improve speed)</strike>  
-Method 2 is more likely to break with game updates~~, though all 3 scripts worked on several tested versions~~ (some assumptions are made about code structure that may no longer hold true with updates)  
+Method 1 is slower, with a hopefully low likelyhood to break with game updates (several assumptions are made about data that may no longer hold true with updates, as an attempt to improve speed) 
+Method 2 is more likely to break with game updates~~, though all 3 scripts worked on several tested versions~~ (some assumptions are made about code structure that may no longer hold true with updates)</strike>   
 
 # Accessing older versions of AoE2:DE
 

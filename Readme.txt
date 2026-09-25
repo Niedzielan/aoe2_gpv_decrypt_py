@@ -1,5 +1,11 @@
 Disclaimer: There should be no AoE2 DE data included or bundled with these decryption tools. The user must dump from their own copy of AoE2 DE, and decrypt their own gpv files
 
+
+Update 185872:
+As of update 185872, there are two major changes to the below information.
+Firstly, Cheat Engine being active may now cause the game to crash, so run-time key extractions is significantly more difficult - Method 2 listed below is currently unfeasible.
+Secondly, the AES keys are now no longer encrypted in the binary, instead are plaintext and easily locatable, making bruteforce / Method 1 trivial. We can locate potential AES keys and compare against gpv files directly, and the AES keys are located in a very simple and unique blob. All information below about TEA is outdated.
+
 aoe2campaign.gpv files are encrypted with AES-256-CTR with a custom substitution box (s-box)
 The keys and iv for the AES cipher and themselves encrypted with Tiny Encryption Algorithm (TEA) and stored in the binary along with the TEA keys
 Further, the AoE2DE_s executable is packed.
